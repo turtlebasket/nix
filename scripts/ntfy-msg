@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# ntfy-msg — send a message to ntfy (via curl)
+#
+# Usage:
+#   ntfy-msg <message>
+#
+# Example:
+#   ntfy-msg "Build finished"
+#
+# Notes:
+#   - Requires $NTFY_ME_TOPIC set (e.g., mytopic)
+#   - Optional $NTFY_HOST (defaults to https://ntfy.sh)
+
+set -u
+
+if [ -z "${NTFY_ME_TOPIC:-}" ]; then
+    echo "Error: NTFY_ME_TOPIC environment variable not set."
+    echo "Set it like: export NTFY_ME_TOPIC=mytopic"
+    exit 1
+fi
+
+# Set default ntfy host if not provided
+NTFY_HOST="${NTFY_HOST:-https://ntfy.sh}"
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <message>"
+    exit 1
+fi
+
+message="$*"
+
+curl -fsS -X POST \
+     -d "$message" \
+     "$NTFY_HOST/$NTFY_ME_TOPIC" >/dev/null 2>&1 || echo "Warning: failed to send ntfy message" >&2

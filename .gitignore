@@ -1,0 +1,8 @@
+result
+result-*
+.direnv/
+private/
+secrets/
+*.age
+__pycache__/
+*.pyc

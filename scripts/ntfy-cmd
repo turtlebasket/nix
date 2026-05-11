@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# ntfy-cmd — run any command, then send ntfy success/failure notification (via curl)
+#
+# Usage:
+#   ntfy-cmd <command> [args...]
+#
+# Example:
+#   ntfy-cmd make build
+#   ntfy-cmd bash -c "sleep 10 && false"
+#   ntfy-cmd ls /nonexistent
+#
+# Notes:
+#   - Requires $NTFY_ME_TOPIC set (e.g., mytopic)
+#   - Optional $NTFY_HOST (defaults to https://ntfy.sh)
+#   - Captures exit code and reports SUCCESS/FAILURE via ntfy with duration.
+
+set -uo pipefail  # no `-e`, so we can handle nonzero exits ourselves
+
+if [ -z "${NTFY_ME_TOPIC:-}" ]; then
+    echo "Error: NTFY_ME_TOPIC environment variable not set."
+    echo "Set it like: export NTFY_ME_TOPIC=mytopic"
+    exit 1
+fi
+
+# Set default ntfy host if not provided
+NTFY_HOST="${NTFY_HOST:-https://ntfy.sh}"
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <command> [args...]"
+    exit 1
+fi
+
+# Reconstruct command with proper quoting for display
+original_cmd=""
+for arg in "$@"; do
+    if [[ "$arg" =~ [[:space:]] ]]; then
+        original_cmd="$original_cmd \"$arg\""
+    else
+        original_cmd="$original_cmd $arg"
+    fi
+done
+original_cmd="${original_cmd# }"  # Remove leading space
+
+start_time=$(date +%s)
+hostname=$(hostname)
+
+# Run the command directly, preserving exit code
+"$@"
+code=$?
+
+end_time=$(date +%s)
+elapsed=$((end_time - start_time))
+duration="$(printf '%02dh:%02dm:%02ds' $((elapsed/3600)) $((elapsed%3600/60)) $((elapsed%60)))"
+
+if [ $code -eq 0 ]; then
+    title="✅ Command exited - SUCCESS"
+else
+    title="❌ Command exited - FAILURE"
+fi
+
+# Truncate if too long (keep first 100 chars + "..." if truncated)
+cmd_str="$original_cmd"
+if [ ${#cmd_str} -gt 100 ]; then
+    cmd_str="${cmd_str:0:100}..."
+fi
+
+body="Command: $cmd_str
+Host: $hostname
+Duration: $duration
+Exit code: $code"
+
+curl -fsS -X POST \
+     -H "Title: $title" \
+     -d "$body" \
+     "$NTFY_HOST/$NTFY_ME_TOPIC" >/dev/null 2>&1 || echo "Warning: failed to send ntfy notification" >&2
+
+exit $code
