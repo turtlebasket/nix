@@ -1,11 +1,47 @@
 {
-  codex-cli-nix,
-  claude-code-nix,
+  llm-agents,
   git-split-diffs,
   lib,
   pkgs,
   ...
 }:
+let
+  system = pkgs.stdenv.hostPlatform.system;
+  llmAgentPackages = llm-agents.packages.${system};
+
+  agentSkillTargets = {
+    universal = ".agents/skills";
+    claudeCode = ".claude/skills";
+  };
+
+  defaultAgentSkillTargets = with agentSkillTargets; [
+    universal
+    claudeCode
+  ];
+
+  managedAgentSkills = {
+    agent-browser = {
+      source = "${llmAgentPackages.agent-browser}/share/agent-browser/skills/agent-browser";
+    };
+  };
+
+  mkAgentSkillFiles =
+    name:
+    {
+      source,
+      targets ? defaultAgentSkillTargets,
+      force ? true,
+    }:
+    lib.genAttrs (map (target: "${target}/${name}") targets) (_: {
+      inherit source force;
+      recursive = true;
+    });
+
+  agentSkillFiles = lib.foldlAttrs (
+    files: name: skill:
+    files // mkAgentSkillFiles name skill
+  ) { } managedAgentSkills;
+in
 {
   programs.home-manager.enable = true;
 
@@ -57,7 +93,10 @@
     extraConfig = builtins.readFile ../config/tmux/tmux.conf;
   };
 
-  home.file.".tmux.conf".source = ../config/tmux/tmux.conf;
+  home.file = {
+    ".tmux.conf".source = ../config/tmux/tmux.conf;
+  }
+  // agentSkillFiles;
 
   xdg.configFile = {
     "nvim/init.lua".source = ../config/neovim/init.lua;
@@ -66,7 +105,6 @@
 
   home.packages =
     let
-      system = pkgs.stdenv.hostPlatform.system;
       personalScripts = pkgs.runCommand "personal-scripts" { } ''
         install -Dm755 ${../scripts/tmux2} "$out/bin/tmux2"
         install -Dm755 ${../scripts/ntfy-cmd} "$out/bin/ntfy-cmd"
@@ -81,7 +119,6 @@
           fd
           git
           gnumake
-          opencode
           python3
           ripgrep
           rust-analyzer
@@ -94,8 +131,11 @@
         ];
     in
     [
-      claude-code-nix.packages.${system}.claude-code
-      codex-cli-nix.packages.${system}.codex
+      llmAgentPackages.agent-browser
+      llmAgentPackages.claude-code
+      llmAgentPackages.codex
+      llmAgentPackages.opencode
+      llmAgentPackages.skills
       git-split-diffs.packages.${system}.git-split-diffs
     ]
     ++ nixpkgsPackages;

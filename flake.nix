@@ -1,6 +1,13 @@
 {
   description = "Reusable personal Nix modules";
 
+  nixConfig = {
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
@@ -9,15 +16,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    claude-code-nix = {
-      url = "github:sadjow/claude-code-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    codex-cli-nix = {
-      url = "github:sadjow/codex-cli-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     git-split-diffs = {
       url = "github:turtlebasket/git-split-diffs";
@@ -29,8 +28,7 @@
     {
       nixpkgs,
       home-manager,
-      claude-code-nix,
-      codex-cli-nix,
+      llm-agents,
       git-split-diffs,
       ...
     }:
@@ -56,8 +54,7 @@
           { lib, pkgs, ... }:
           import ./modules/workstation.nix {
             inherit
-              claude-code-nix
-              codex-cli-nix
+              llm-agents
               git-split-diffs
               lib
               pkgs
