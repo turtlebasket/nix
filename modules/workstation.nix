@@ -93,6 +93,13 @@ in
     extraConfig = builtins.readFile ../config/tmux/tmux.conf;
   };
 
+  programs.direnv = {
+    enable = true;
+    enableZshIntegration = true;
+
+    nix-direnv.enable = true;
+  };
+
   home.file = {
     ".tmux.conf".source = ../config/tmux/tmux.conf;
   }
@@ -115,7 +122,6 @@ in
         (with pkgs; [
           basedpyright
           curl
-          direnv
           fd
           git
           gnumake
