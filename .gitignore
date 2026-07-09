@@ -1,3 +1,5 @@
+.worktrees/
+
 result
 result-*
 .direnv/
@@ -6,3 +8,5 @@ secrets/
 *.age
 __pycache__/
 *.pyc
+
+.DS_Store
