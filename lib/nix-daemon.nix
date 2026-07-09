@@ -12,7 +12,7 @@ let
     "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
   ];
 
-  cacheNixosTrustedPublicKey = "cache.nixos.org-1:6NCHdD59Q431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=";
+  cacheNixosTrustedPublicKey = "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=";
 in
 rec {
   inherit
@@ -31,8 +31,8 @@ rec {
   ];
 
   nixosSettings = {
-    substituters = lib.mkBefore preferredSubstituters;
-    trusted-public-keys = lib.mkBefore extraTrustedPublicKeys;
+    substituters = lib.mkBefore substituters;
+    trusted-public-keys = lib.mkBefore trustedPublicKeys;
     builders-use-substitutes = true;
     experimental-features = experimentalFeatures;
   };
