@@ -25,7 +25,21 @@ homeConfigurations.<host> = nix.lib.mkHomeConfiguration {
 };
 ```
 
-For other module families, expose them through the usual flake outputs, such as `nixosModules` or `darwinModules`, and compose them from the private flake.
+For NixOS hosts, compose system modules from `nixosModules`:
+
+```nix
+nixosConfigurations.<host> = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  modules = [
+    nix.nixosModules.server
+    ./hosts/<host>/system.nix
+  ];
+};
+```
+
+`nix.nixosModules.server` includes the shared Nix daemon policy, openssh defaults, and firewall port 22. The daemon policy configures preferred substituters, trusted public keys, `builders-use-substitutes`, and `experimental-features = nix-command flakes`. For NixOS hosts that only need the daemon policy, import `nix.nixosModules.nix-daemon`.
+
+For plain Linux servers with multi-user Nix, such as Ubuntu machines, NixOS modules cannot be applied by Home Manager. Treat daemon-level Nix settings as a host bootstrap step in the private config repo. This repo exposes the shared settings as `lib.nixDaemon.nixConf` so private bootstrap code can install the same daemon policy into `/etc/nix/nix.conf`.
 
 ## Maintenance
 

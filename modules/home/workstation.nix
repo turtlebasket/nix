@@ -78,7 +78,7 @@ in
         export PATH=${config.programs.nixvim.build.package}/bin:$PATH
       '')
       (lib.mkOrder 1000 ''
-        source ${../config/zsh/shared.zsh}
+        source ${../../config/zsh/shared.zsh}
       '')
     ];
   };
@@ -92,7 +92,7 @@ in
 
   programs.tmux = {
     enable = true;
-    extraConfig = builtins.readFile ../config/tmux/tmux.conf;
+    extraConfig = builtins.readFile ../../config/tmux/tmux.conf;
   };
 
   programs.direnv = {
@@ -103,17 +103,17 @@ in
   };
 
   home.file = {
-    ".tmux.conf".source = ../config/tmux/tmux.conf;
+    ".tmux.conf".source = ../../config/tmux/tmux.conf;
   }
   // agentSkillFiles;
 
   home.packages =
     let
-      personalScripts = pkgs.runCommand "personal-scripts" { } ''
-        install -Dm755 ${../scripts/tmux2} "$out/bin/tmux2"
-        install -Dm755 ${../scripts/ntfy-cmd} "$out/bin/ntfy-cmd"
-        install -Dm755 ${../scripts/ntfy-msg} "$out/bin/ntfy-msg"
-        install -Dm755 ${../scripts/ntfy-osc9} "$out/bin/ntfy-osc9"
+      personalCommands = pkgs.runCommand "personal-commands" { } ''
+        install -Dm755 ${../../bin/tmux2} "$out/bin/tmux2"
+        install -Dm755 ${../../bin/ntfy-cmd} "$out/bin/ntfy-cmd"
+        install -Dm755 ${../../bin/ntfy-msg} "$out/bin/ntfy-msg"
+        install -Dm755 ${../../bin/ntfy-osc9} "$out/bin/ntfy-osc9"
       '';
       nixpkgsPackages =
         (with pkgs; [
@@ -130,7 +130,7 @@ in
           typescript-language-server
         ])
         ++ [
-          personalScripts
+          personalCommands
         ];
     in
     [

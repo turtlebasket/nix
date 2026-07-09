@@ -48,6 +48,17 @@
         linuxSystem
       ];
 
+      forSystems =
+        f:
+        builtins.listToAttrs (
+          map (system: {
+            name = system;
+            value = f system;
+          }) systems
+        );
+
+      nixDaemon = import ./lib/nix-daemon.nix { lib = nixpkgs.lib; };
+
       mkHomeDirectory =
         { system, username }:
         if nixpkgs.lib.hasSuffix "-darwin" system then "/Users/${username}" else "/home/${username}";
@@ -60,7 +71,7 @@
             pkgs,
             ...
           }:
-          import ./modules/workstation.nix {
+          import ./modules/home/workstation.nix {
             inherit
               config
               llm-agents
@@ -72,6 +83,13 @@
           };
 
         default = workstation;
+      };
+
+      nixosModules = rec {
+        nix-daemon = ./modules/nixos/nix-daemon.nix;
+        server = ./modules/nixos/server.nix;
+
+        default = server;
       };
 
       mkPkgs =
@@ -120,17 +138,12 @@
         };
     in
     {
-      formatter = builtins.listToAttrs (
-        map (system: {
-          name = system;
-          value = mkFormatter system;
-        }) systems
-      );
+      formatter = forSystems mkFormatter;
 
-      inherit homeManagerModules;
+      inherit homeManagerModules nixosModules;
 
       lib = {
-        inherit mkHomeConfiguration mkHomeDirectory;
+        inherit mkHomeConfiguration mkHomeDirectory nixDaemon;
       };
     };
 }
