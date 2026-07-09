@@ -1,6 +1,8 @@
 {
+  config,
   llm-agents,
   git-split-diffs,
+  nixvim,
   lib,
   pkgs,
   ...
@@ -43,6 +45,10 @@ let
   ) { } managedAgentSkills;
 in
 {
+  imports = [
+    nixvim.homeModules.nixvim
+  ];
+
   programs.home-manager.enable = true;
 
   programs.zsh = {
@@ -68,6 +74,9 @@ in
       (lib.mkOrder 900 ''
         [[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
       '')
+      (lib.mkOrder 950 ''
+        export PATH=${config.programs.nixvim.build.package}/bin:$PATH
+      '')
       (lib.mkOrder 1000 ''
         source ${../config/zsh/shared.zsh}
       '')
@@ -79,14 +88,7 @@ in
     enableZshIntegration = true;
   };
 
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-    withPython3 = false;
-    withRuby = false;
-  };
+  programs.nixvim.imports = [ ./nixvim.nix ];
 
   programs.tmux = {
     enable = true;
@@ -104,11 +106,6 @@ in
     ".tmux.conf".source = ../config/tmux/tmux.conf;
   }
   // agentSkillFiles;
-
-  xdg.configFile = {
-    "nvim/init.lua".source = ../config/neovim/init.lua;
-    "nvim/lazy-lock.json".source = ../config/neovim/lazy-lock.json;
-  };
 
   home.packages =
     let

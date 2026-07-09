@@ -16,6 +16,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixvim.url = "github:nix-community/nixvim";
+
     llm-agents.url = "github:numtide/llm-agents.nix";
 
     git-split-diffs = {
@@ -28,6 +30,7 @@
     {
       nixpkgs,
       home-manager,
+      nixvim,
       llm-agents,
       git-split-diffs,
       ...
@@ -51,11 +54,18 @@
 
       homeManagerModules = rec {
         workstation =
-          { lib, pkgs, ... }:
+          {
+            config,
+            lib,
+            pkgs,
+            ...
+          }:
           import ./modules/workstation.nix {
             inherit
+              config
               llm-agents
               git-split-diffs
+              nixvim
               lib
               pkgs
               ;
