@@ -46,54 +46,20 @@ let
 in
 {
   imports = [
-    nixvim.homeModules.nixvim
+    (import ./terminal.nix {
+      inherit
+        config
+        nixvim
+        lib
+        pkgs
+        ;
+      nixvimConfig = ./nixvim-full.nix;
+    })
   ];
 
-  programs.home-manager.enable = true;
-
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    envExtra = ''
-      [[ -r "$HOME/.zshenv.local" ]] && source "$HOME/.zshenv.local"
-    '';
-
-    oh-my-zsh = {
-      enable = true;
-      plugins = [
-        "git"
-        "tmux"
-      ];
-      theme = "";
-      extraConfig = ''
-        zstyle ':omz:update' mode disabled
-      '';
-    };
-
-    initContent = lib.mkMerge [
-      (lib.mkOrder 900 ''
-        [[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
-      '')
-      (lib.mkOrder 950 ''
-        export PATH=${config.programs.nixvim.build.package}/bin:$PATH
-      '')
-      (lib.mkOrder 1000 ''
-        source ${../../config/zsh/shared.zsh}
-      '')
-    ];
-  };
-
-  programs.starship = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-
-  programs.nixvim.imports = [ ./nixvim.nix ];
-
-  programs.tmux = {
-    enable = true;
-    extraConfig = builtins.readFile ../../config/tmux/tmux.conf;
-  };
+  programs.zsh.initContent = lib.mkOrder 1000 ''
+    source ${../../config/zsh/shared.zsh}
+  '';
 
   programs.direnv = {
     enable = true;
@@ -102,15 +68,11 @@ in
     nix-direnv.enable = true;
   };
 
-  home.file = {
-    ".tmux.conf".source = ../../config/tmux/tmux.conf;
-  }
-  // agentSkillFiles;
+  home.file = agentSkillFiles;
 
   home.packages =
     let
-      personalCommands = pkgs.runCommand "personal-commands" { } ''
-        install -Dm755 ${../../bin/tmux2} "$out/bin/tmux2"
+      personalCommands = pkgs.runCommand "personal-workstation-commands" { } ''
         install -Dm755 ${../../bin/ntfy-cmd} "$out/bin/ntfy-cmd"
         install -Dm755 ${../../bin/ntfy-msg} "$out/bin/ntfy-msg"
         install -Dm755 ${../../bin/ntfy-osc9} "$out/bin/ntfy-osc9"

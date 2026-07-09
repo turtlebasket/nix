@@ -64,6 +64,22 @@
         if nixpkgs.lib.hasSuffix "-darwin" system then "/Users/${username}" else "/home/${username}";
 
       homeManagerModules = rec {
+        terminal =
+          {
+            config,
+            lib,
+            pkgs,
+            ...
+          }:
+          import ./modules/home/terminal.nix {
+            inherit
+              config
+              nixvim
+              lib
+              pkgs
+              ;
+          };
+
         workstation =
           {
             config,

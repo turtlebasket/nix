@@ -25,6 +25,9 @@ homeConfigurations.<host> = nix.lib.mkHomeConfiguration {
 };
 ```
 
+Use `nix.homeManagerModules.terminal` for shell/tmux/btop/dua/neovim hosts, such as jump boxes.
+Use `nix.homeManagerModules.workstation` for full interactive machines; it imports `terminal` and adds LSP, Treesitter, language tooling, and agent packages.
+
 For NixOS hosts, compose system modules from `nixosModules`:
 
 ```nix
