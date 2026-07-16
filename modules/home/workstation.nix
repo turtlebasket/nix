@@ -14,11 +14,13 @@ let
   agentSkillTargets = {
     universal = ".agents/skills";
     claudeCode = ".claude/skills";
+    codex = ".codex/skills";
   };
 
   defaultAgentSkillTargets = with agentSkillTargets; [
     universal
     claudeCode
+    codex
   ];
 
   managedAgentSkills = {
