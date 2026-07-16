@@ -72,6 +72,26 @@ in
 
   home.file = agentSkillFiles;
 
+  xdg.configFile."git/nix-personal.config".text = ''
+    [core]
+      pager = git-split-diffs --color | less -+LFX
+  '';
+
+  home.activation.includeNixPersonalGitConfig =
+    lib.hm.dag.entryAfter
+      [
+        "installPackages"
+        "linkGeneration"
+      ]
+      ''
+        include_path="~/.config/git/nix-personal.config"
+
+        if ! ${pkgs.git}/bin/git config --global --get-all include.path \
+          | ${pkgs.gnugrep}/bin/grep --fixed-strings --line-regexp --quiet "$include_path"; then
+          $DRY_RUN_CMD ${pkgs.git}/bin/git config --global --add include.path "$include_path"
+        fi
+      '';
+
   home.packages =
     let
       personalCommands = pkgs.runCommand "personal-workstation-commands" { } ''
