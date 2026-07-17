@@ -75,6 +75,8 @@ in
   xdg.configFile."git/nix-personal.config".text = ''
     [core]
       pager = git-split-diffs --color | less -+LFX
+    [split-diffs]
+      theme-name = auto
   '';
 
   home.activation.includeNixPersonalGitConfig =
