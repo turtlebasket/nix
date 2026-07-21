@@ -1,6 +1,7 @@
 {
   config,
   llm-agents,
+  nix-skills,
   git-split-diffs,
   nixvim,
   lib,
@@ -10,6 +11,7 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   llmAgentPackages = llm-agents.packages.${system};
+  nixSkills = nix-skills.skills.${system};
 
   agentSkillTargets = {
     universal = ".agents/skills";
@@ -24,9 +26,9 @@ let
   ];
 
   managedAgentSkills = {
-    agent-browser = {
-      source = "${llmAgentPackages.agent-browser}/share/agent-browser/skills/agent-browser";
-    };
+    # Discovery stub that defers to `agent-browser skills get` for content
+    agent-browser.source = nixSkills.vercel-labs.agent-browser.agent-browser;
+    frontend-design.source = nixSkills.anthropics.skills.frontend-design;
   };
 
   mkAgentSkillFiles =

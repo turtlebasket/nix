@@ -137,6 +137,26 @@
         "type": "github"
       }
     },
+    "nix-skills": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784664502,
+        "narHash": "sha256-BqxkceuSFl03wiR6OjTBRNt4hUveW2t9l9GPtOviL24=",
+        "owner": "sudosubin",
+        "repo": "nix-skills",
+        "rev": "22d7978713ff4f67aea75085a3893c45fd200669",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sudosubin",
+        "repo": "nix-skills",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1784210874,
@@ -210,6 +230,7 @@
         "git-split-diffs": "git-split-diffs",
         "home-manager": "home-manager",
         "llm-agents": "llm-agents",
+        "nix-skills": "nix-skills",
         "nixpkgs": "nixpkgs_2",
         "nixvim": "nixvim"
       }

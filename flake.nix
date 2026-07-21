@@ -20,6 +20,11 @@
 
     llm-agents.url = "github:numtide/llm-agents.nix";
 
+    nix-skills = {
+      url = "github:sudosubin/nix-skills";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     git-split-diffs = {
       url = "github:turtlebasket/git-split-diffs";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,6 +37,7 @@
       home-manager,
       nixvim,
       llm-agents,
+      nix-skills,
       git-split-diffs,
       ...
     }:
@@ -91,6 +97,7 @@
             inherit
               config
               llm-agents
+              nix-skills
               git-split-diffs
               nixvim
               lib
