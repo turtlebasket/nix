@@ -59,6 +59,8 @@ in
 
   programs.btop.enable = true;
 
+  programs.lsd.enable = true;
+
   programs.nixvim.imports = [ nixvimConfig ];
 
   home.file = {
