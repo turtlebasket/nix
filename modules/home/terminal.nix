@@ -68,7 +68,12 @@ in
   };
 
   home.packages = [
+    pkgs.bat
     pkgs.dua
+    pkgs.glow
+    pkgs.jq
+    pkgs.librespeed-cli
     personalCommands
+    pkgs.yq-go
   ];
 }
