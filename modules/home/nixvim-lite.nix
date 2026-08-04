@@ -1,4 +1,8 @@
-{ lib, ... }:
+{
+  lib,
+  pkgs,
+  ...
+}:
 {
   enable = true;
   defaultEditor = true;
@@ -13,7 +17,20 @@
     if vim.g.vscode then
       return
     end
+
+    vim.cmd.packadd('vscode.nvim')
+
+    local vscode = require('vscode')
+    vscode.setup({ transparent = true })
+    vscode.load()
   '';
+
+  extraPlugins = [
+    {
+      plugin = pkgs.vimPlugins.vscode-nvim;
+      optional = true;
+    }
+  ];
 
   globals = {
     mapleader = " ";
@@ -42,11 +59,6 @@
       command = "setlocal wrap";
     }
   ];
-
-  colorschemes.vscode = {
-    enable = true;
-    settings.transparent = true;
-  };
 
   plugins = {
     auto-session = {
