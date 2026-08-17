@@ -40,13 +40,24 @@ let
     }:
     lib.genAttrs (map (target: "${target}/${name}") targets) (_: {
       inherit source force;
-      recursive = true;
     });
 
   agentSkillFiles = lib.foldlAttrs (
     files: name: skill:
     files // mkAgentSkillFiles name skill
   ) { } managedAgentSkills;
+
+  agentSkillDirectLinks = lib.concatMap (
+    name:
+    let
+      skill = managedAgentSkills.${name};
+      targets = skill.targets or defaultAgentSkillTargets;
+    in
+    map (target: {
+      inherit (skill) source;
+      path = "${target}/${name}";
+    }) targets
+  ) (lib.attrNames managedAgentSkills);
 in
 {
   imports = [
@@ -73,6 +84,45 @@ in
   };
 
   home.file = agentSkillFiles;
+
+  home.activation.migrateLegacyAgentSkillDirectories = lib.hm.dag.entryBefore [ "linkGeneration" ] (
+    lib.concatMapStringsSep "\n" (skill: ''
+      skill_path="$HOME/${skill.path}"
+
+      if [[ -d "$skill_path" && ! -L "$skill_path" ]]; then
+        skill_manifest_target="$(${pkgs.coreutils}/bin/readlink "$skill_path/SKILL.md" 2>/dev/null || true)"
+
+        case "$skill_manifest_target" in
+          /nix/store/*)
+            ;;
+          *)
+            echo "Refusing to replace unmanaged agent skill directory: $skill_path" >&2
+            exit 1
+            ;;
+        esac
+
+        legacy_backup=${lib.escapeShellArg "${config.xdg.stateHome}/nix-personal/legacy-agent-skills/${skill.path}"}
+
+        if [[ -e "$legacy_backup" || -L "$legacy_backup" ]]; then
+          echo "Agent skill migration backup already exists: $legacy_backup" >&2
+          exit 1
+        fi
+
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir --parents "$(${pkgs.coreutils}/bin/dirname "$legacy_backup")"
+        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mv "$skill_path" "$legacy_backup"
+      fi
+    '') agentSkillDirectLinks
+  );
+
+  # Codex follows a symlinked skill directory, but not Home Manager's usual
+  # two-hop directory link through the generation's home-files tree.
+  home.activation.linkAgentSkillsDirectly = lib.hm.dag.entryAfter [ "linkGeneration" ] (
+    lib.concatMapStringsSep "\n" (skill: ''
+      $DRY_RUN_CMD ${pkgs.coreutils}/bin/ln --symbolic --force --no-dereference \
+        ${lib.escapeShellArg (toString skill.source)} \
+        "$HOME/${skill.path}"
+    '') agentSkillDirectLinks
+  );
 
   xdg.configFile."git/nix-personal.config".text = ''
     [core]
