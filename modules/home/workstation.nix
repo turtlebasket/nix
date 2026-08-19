@@ -12,6 +12,23 @@ let
   system = pkgs.stdenv.hostPlatform.system;
   llmAgentPackages = llm-agents.packages.${system};
   nixSkills = nix-skills.skills.${system};
+  gitSplitDiffsLesskeySource = pkgs.writeText "git-split-diffs-lesskey-source" ''
+    #command
+    f  forw-search \^ ■■ \n
+    F  back-search \^ ■■ \n
+  '';
+  gitSplitDiffsLess = pkgs.less.overrideAttrs (oldAttrs: {
+    pname = "git-split-diffs-less";
+    postPatch = (oldAttrs.postPatch or "") + ''
+      substituteInPlace command.c \
+        --replace-fail \
+          'multi_search(cbuf, (int) number, 0);' \
+          'multi_search(cbuf, (int) number, strcmp(cbuf, "^ ■■ ") == 0);'
+    '';
+  });
+  gitSplitDiffsLesskey = pkgs.runCommand "git-split-diffs-lesskey" { } ''
+    ${gitSplitDiffsLess}/bin/lesskey -o "$out" ${gitSplitDiffsLesskeySource}
+  '';
 
   agentSkillTargets = {
     universal = ".agents/skills";
@@ -126,7 +143,7 @@ in
 
   xdg.configFile."git/nix-personal.config".text = ''
     [core]
-      pager = git-split-diffs --color | less -+LFX
+      pager = git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-file=${gitSplitDiffsLesskey} -A -G -j2 -+LFX
     [split-diffs]
       theme-name = auto
   '';
