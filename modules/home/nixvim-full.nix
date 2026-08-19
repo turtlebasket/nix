@@ -1,9 +1,16 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   treesitterGrammars = config.plugins.treesitter.package.builtGrammars;
 in
 {
   imports = [ ./nixvim-lite.nix ];
+
+  extraPlugins = [ pkgs.vimPlugins.satellite-nvim ];
 
   extraConfigLuaPre = lib.mkOrder 110 ''
     vim.hl.priorities.semantic_tokens = 140
@@ -93,6 +100,19 @@ in
   };
 
   extraConfigLua = ''
+    require('satellite').setup({
+      winblend = 0,
+      excluded_filetypes = { 'NvimTree' },
+      handlers = {
+        cursor = { enable = true },
+        diagnostic = { enable = true },
+        gitsigns = { enable = true },
+        marks = { enable = false },
+        quickfix = { enable = false },
+        search = { enable = true },
+      },
+    })
+
     local function map(mode, lhs, rhs)
       vim.keymap.set(mode, lhs, rhs, { silent = true })
     end
