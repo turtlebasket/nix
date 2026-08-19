@@ -92,6 +92,9 @@ in
         javascript
         markdown
         markdown_inline
+        nix
+        python
+        rust
         svelte
         typescript
       ];
