@@ -114,7 +114,6 @@
             'NvimTreeStatuslineNC',
             'NvimTreeNormalFloat',
             'NvimTreeNormalFloatBorder',
-            'NvimTreeCursorLine',
           }) do
             vim.api.nvim_set_hl(0, group, { bg = 'NONE' })
           end
@@ -137,6 +136,20 @@
         })
       '';
       settings = {
+        on_attach.__raw = ''
+          function(bufnr)
+            local api = require('nvim-tree.api')
+
+            api.map.on_attach.default(bufnr)
+            vim.keymap.set('n', '<LeftRelease>', api.node.open.edit, {
+              buffer = bufnr,
+              desc = 'nvim-tree: Open',
+              noremap = true,
+              silent = true,
+              nowait = true,
+            })
+          end
+        '';
         view.width = 42;
         update_focused_file = {
           enable = true;
