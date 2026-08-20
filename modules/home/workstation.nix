@@ -13,7 +13,7 @@ let
   system = pkgs.stdenv.hostPlatform.system;
   llmAgentPackages = llm-agents.packages.${system};
   nixSkills = nix-skills.skills.${system};
-  gitSplitDiffsLesskeySource = pkgs.writeText "git-split-diffs-lesskey-source" ''
+  gitSplitDiffsLesskey = pkgs.writeText "git-split-diffs-lesskey" ''
     #command
     f  forw-search \^ ■■ \n
     F  back-search \^ ■■ \n
@@ -27,9 +27,6 @@ let
           'multi_search(cbuf, (int) number, strcmp(cbuf, "^ ■■ ") == 0);'
     '';
   });
-  gitSplitDiffsLesskey = pkgs.runCommand "git-split-diffs-lesskey" { } ''
-    ${gitSplitDiffsLess}/bin/lesskey -o "$out" ${gitSplitDiffsLesskeySource}
-  '';
 
   agentSkillTargets = {
     universal = ".agents/skills";
@@ -64,18 +61,6 @@ let
     files: name: skill:
     files // mkAgentSkillFiles name skill
   ) { } managedAgentSkills;
-
-  agentSkillDirectLinks = lib.concatMap (
-    name:
-    let
-      skill = managedAgentSkills.${name};
-      targets = skill.targets or defaultAgentSkillTargets;
-    in
-    map (target: {
-      inherit (skill) source;
-      path = "${target}/${name}";
-    }) targets
-  ) (lib.attrNames managedAgentSkills);
 in
 {
   imports = [
@@ -105,66 +90,18 @@ in
 
   home.file = agentSkillFiles;
 
-  home.activation.migrateLegacyAgentSkillDirectories = lib.hm.dag.entryBefore [ "linkGeneration" ] (
-    lib.concatMapStringsSep "\n" (skill: ''
-      skill_path="$HOME/${skill.path}"
+  programs.git = {
+    enable = true;
+    settings = {
+      core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -A -G -j2 -+LFX";
+      split-diffs.theme-name = "auto";
+    };
+  };
 
-      if [[ -d "$skill_path" && ! -L "$skill_path" ]]; then
-        skill_manifest_target="$(${pkgs.coreutils}/bin/readlink "$skill_path/SKILL.md" 2>/dev/null || true)"
-
-        case "$skill_manifest_target" in
-          /nix/store/*)
-            ;;
-          *)
-            echo "Refusing to replace unmanaged agent skill directory: $skill_path" >&2
-            exit 1
-            ;;
-        esac
-
-        legacy_backup=${lib.escapeShellArg "${config.xdg.stateHome}/nix-personal/legacy-agent-skills/${skill.path}"}
-
-        if [[ -e "$legacy_backup" || -L "$legacy_backup" ]]; then
-          echo "Agent skill migration backup already exists: $legacy_backup" >&2
-          exit 1
-        fi
-
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir --parents "$(${pkgs.coreutils}/bin/dirname "$legacy_backup")"
-        $DRY_RUN_CMD ${pkgs.coreutils}/bin/mv "$skill_path" "$legacy_backup"
-      fi
-    '') agentSkillDirectLinks
-  );
-
-  # Codex follows a symlinked skill directory, but not Home Manager's usual
-  # two-hop directory link through the generation's home-files tree.
-  home.activation.linkAgentSkillsDirectly = lib.hm.dag.entryAfter [ "linkGeneration" ] (
-    lib.concatMapStringsSep "\n" (skill: ''
-      $DRY_RUN_CMD ${pkgs.coreutils}/bin/ln --symbolic --force --no-dereference \
-        ${lib.escapeShellArg (toString skill.source)} \
-        "$HOME/${skill.path}"
-    '') agentSkillDirectLinks
-  );
-
-  xdg.configFile."git/nix-personal.config".text = ''
-    [core]
-      pager = git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-file=${gitSplitDiffsLesskey} -A -G -j2 -+LFX
-    [split-diffs]
-      theme-name = auto
-  '';
-
-  home.activation.includeNixPersonalGitConfig =
-    lib.hm.dag.entryAfter
-      [
-        "installPackages"
-        "linkGeneration"
-      ]
-      ''
-        include_path="~/.config/git/nix-personal.config"
-
-        if ! ${pkgs.git}/bin/git config --global --get-all include.path \
-          | ${pkgs.gnugrep}/bin/grep --fixed-strings --line-regexp --quiet "$include_path"; then
-          $DRY_RUN_CMD ${pkgs.git}/bin/git config --global --add include.path "$include_path"
-        fi
-      '';
+  programs.less = {
+    enable = true;
+    package = gitSplitDiffsLess;
+  };
 
   home.packages =
     let
@@ -178,7 +115,6 @@ in
           basedpyright
           curl
           fd
-          git
           gnumake
           python3
           ripgrep
