@@ -103,7 +103,64 @@
 
     nvim-tree = {
       enable = true;
+      luaConfig.pre = ''
+        local current_nvim_tree_file
+        local nvim_tree_current_file_namespace = vim.api.nvim_create_namespace('NvimTreeCurrentFile')
+
+        local function highlight_current_nvim_tree_file(event)
+          local bufnr = event and event.bufnr or require('nvim-tree.view').get_bufnr()
+          if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+            return
+          end
+
+          vim.api.nvim_buf_clear_namespace(bufnr, nvim_tree_current_file_namespace, 0, -1)
+          if not current_nvim_tree_file then
+            return
+          end
+
+          local explorer = require('nvim-tree.core').get_explorer()
+          if not explorer then
+            return
+          end
+
+          local line = explorer:find_node_line(explorer:get_node_from_path(current_nvim_tree_file))
+          if line < 1 then
+            return
+          end
+
+          vim.api.nvim_buf_set_extmark(bufnr, nvim_tree_current_file_namespace, line - 1, 0, {
+            line_hl_group = 'NvimTreeCurrentFile',
+            priority = 300,
+          })
+        end
+
+        local function update_current_nvim_tree_file(bufnr)
+          if vim.bo[bufnr].buftype ~= "" then
+            return
+          end
+
+          local path = vim.api.nvim_buf_get_name(bufnr)
+          current_nvim_tree_file = path ~= "" and (vim.uv.fs_realpath(path) or path) or nil
+          vim.schedule(highlight_current_nvim_tree_file)
+        end
+
+        vim.api.nvim_create_autocmd('BufEnter', {
+          callback = function(args)
+            update_current_nvim_tree_file(args.buf)
+          end,
+        })
+
+        update_current_nvim_tree_file(vim.api.nvim_get_current_buf())
+      '';
       luaConfig.post = ''
+        local saved_guicursor
+
+        local nvim_tree_api = require('nvim-tree.api')
+        nvim_tree_api.events.subscribe(
+          nvim_tree_api.events.Event.TreeRendered,
+          highlight_current_nvim_tree_file
+        )
+
         local function apply_nvim_tree_transparency()
           for _, group in ipairs({
             'NvimTreeNormal',
@@ -118,6 +175,26 @@
             vim.api.nvim_set_hl(0, group, { bg = 'NONE' })
           end
           vim.api.nvim_set_hl(0, 'NvimTreeWinSeparator', { bg = 'NONE', fg = 'NONE' })
+          vim.api.nvim_set_hl(0, 'NvimTreeCurrentFile', { link = 'Visual' })
+          vim.api.nvim_set_hl(0, 'NvimTreeHiddenCursor', { blend = 100, reverse = true })
+        end
+
+        local function hide_nvim_tree_cursor()
+          if vim.bo.filetype ~= 'NvimTree' or saved_guicursor ~= nil then
+            return
+          end
+
+          saved_guicursor = vim.o.guicursor
+          vim.o.guicursor = 'n-v-ve-o:block-NvimTreeHiddenCursor'
+        end
+
+        local function restore_nvim_tree_cursor()
+          if saved_guicursor == nil then
+            return
+          end
+
+          vim.o.guicursor = saved_guicursor
+          saved_guicursor = nil
         end
 
         apply_nvim_tree_transparency()
@@ -132,6 +209,19 @@
           pattern = 'NvimTree',
           callback = function()
             vim.schedule(apply_nvim_tree_transparency)
+            hide_nvim_tree_cursor()
+          end,
+        })
+
+        vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
+          callback = hide_nvim_tree_cursor,
+        })
+
+        vim.api.nvim_create_autocmd({ 'BufLeave', 'WinLeave', 'VimLeavePre' }, {
+          callback = function()
+            if vim.bo.filetype == 'NvimTree' then
+              restore_nvim_tree_cursor()
+            end
           end,
         })
       '';

@@ -232,7 +232,25 @@
         "llm-agents": "llm-agents",
         "nix-skills": "nix-skills",
         "nixpkgs": "nixpkgs_2",
-        "nixvim": "nixvim"
+        "nixvim": "nixvim",
+        "satellite-nvim": "satellite-nvim"
+      }
+    },
+    "satellite-nvim": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777630908,
+        "narHash": "sha256-2kvs9HgNcLy7ym2C2XZRv3Qa2ttNLdpa9l7oRYy8KLQ=",
+        "owner": "lewis6991",
+        "repo": "satellite.nvim",
+        "rev": "87843c9c8f28b54332497302de380a6d94c9e82b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lewis6991",
+        "repo": "satellite.nvim",
+        "rev": "87843c9c8f28b54332497302de380a6d94c9e82b",
+        "type": "github"
       }
     },
     "systems": {

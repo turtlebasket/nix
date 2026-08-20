@@ -4,6 +4,7 @@
   nix-skills,
   git-split-diffs,
   nixvim,
+  satellite-nvim,
   lib,
   pkgs,
   ...
@@ -85,7 +86,9 @@ in
         lib
         pkgs
         ;
-      nixvimConfig = ./nixvim-full.nix;
+      nixvimConfig = import ./nixvim-full.nix {
+        satelliteNvimSrc = satellite-nvim;
+      };
     })
   ];
 

@@ -18,6 +18,11 @@
 
     nixvim.url = "github:nix-community/nixvim";
 
+    satellite-nvim = {
+      url = "github:lewis6991/satellite.nvim/87843c9c8f28b54332497302de380a6d94c9e82b";
+      flake = false;
+    };
+
     llm-agents.url = "github:numtide/llm-agents.nix";
 
     nix-skills = {
@@ -36,6 +41,7 @@
       nixpkgs,
       home-manager,
       nixvim,
+      satellite-nvim,
       llm-agents,
       nix-skills,
       git-split-diffs,
@@ -100,6 +106,7 @@
               nix-skills
               git-split-diffs
               nixvim
+              satellite-nvim
               lib
               pkgs
               ;

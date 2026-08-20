@@ -1,3 +1,4 @@
+{ satelliteNvimSrc }:
 {
   config,
   lib,
@@ -6,11 +7,22 @@
 }:
 let
   treesitterGrammars = config.plugins.treesitter.package.builtGrammars;
+  satellite-nvim = pkgs.vimUtils.buildVimPlugin {
+    pname = "satellite.nvim";
+    version = "1.0.0-unstable-2026-05-01";
+    src = satelliteNvimSrc;
+    postPatch = ''
+      substituteInPlace lua/satellite/view.lua \
+        --replace-fail \
+          "  if vim.wo[winid].winfixbuf then" \
+          "  if vim.wo[winid].wrap or vim.wo[winid].winfixbuf then"
+    '';
+  };
 in
 {
   imports = [ ./nixvim-lite.nix ];
 
-  extraPlugins = [ pkgs.vimPlugins.satellite-nvim ];
+  extraPlugins = [ satellite-nvim ];
 
   extraConfigLuaPre = lib.mkOrder 110 ''
     vim.hl.priorities.semantic_tokens = 140
@@ -114,6 +126,11 @@ in
         quickfix = { enable = false },
         search = { enable = true },
       },
+    })
+
+    vim.api.nvim_create_autocmd('OptionSet', {
+      pattern = 'wrap',
+      callback = require('satellite.view').schedule_refresh,
     })
 
     local function map(mode, lhs, rhs)
