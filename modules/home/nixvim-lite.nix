@@ -277,6 +277,17 @@
       vim.keymap.set(mode, lhs, rhs, { silent = true })
     end
 
+    local function toggle_or_focus_nvim_tree()
+      local api = require('nvim-tree.api')
+
+      if api.tree.is_visible() and not api.tree.is_tree_buf() then
+        api.tree.focus()
+        return
+      end
+
+      api.tree.toggle({ find_file = true, focus = true })
+    end
+
     local function confirm_clear_buffers()
       local choice = vim.fn.confirm('Clear all buffers?', '&Yes\n&No', 2)
       if choice ~= 1 then
@@ -316,8 +327,8 @@
     end
 
     for _, m in ipairs({
-      { 'n', '<c-b>', '<cmd>NvimTreeFindFileToggle<cr>' },
-      { 'n', '<c-e>', '<cmd>NvimTreeFindFileToggle<cr>' },
+      { 'n', '<c-b>', toggle_or_focus_nvim_tree },
+      { 'n', '<c-e>', toggle_or_focus_nvim_tree },
       { 'n', '<c-`>', '<cmd>ToggleTerm direction="float"<cr>' },
       { 't', '<c-`>', '<cmd>ToggleTerm<cr>' },
       { 'n', '<leader>gs', '<cmd>Telescope git_status<cr>' },
