@@ -231,6 +231,11 @@
             local api = require('nvim-tree.api')
 
             api.map.on_attach.default(bufnr)
+            vim.keymap.set('n', '<c-e>', '<cmd>NvimTreeFindFileToggle<cr>', {
+              buffer = bufnr,
+              desc = 'nvim-tree: Toggle',
+              silent = true,
+            })
             vim.keymap.set('n', '<LeftRelease>', api.node.open.edit, {
               buffer = bufnr,
               desc = 'nvim-tree: Open',
@@ -312,6 +317,7 @@
 
     for _, m in ipairs({
       { 'n', '<c-b>', '<cmd>NvimTreeFindFileToggle<cr>' },
+      { 'n', '<c-e>', '<cmd>NvimTreeFindFileToggle<cr>' },
       { 'n', '<c-`>', '<cmd>ToggleTerm direction="float"<cr>' },
       { 't', '<c-`>', '<cmd>ToggleTerm<cr>' },
       { 'n', '<leader>gs', '<cmd>Telescope git_status<cr>' },
