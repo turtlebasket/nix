@@ -7,6 +7,11 @@
   ...
 }:
 let
+  mkBtopConfig = variant: ''
+    #? Config file for btop v.${pkgs.btop.version}
+    color_theme = "flexoki-${variant}"
+    theme_background = false
+  '';
   personalCommands = pkgs.runCommand "personal-terminal-commands" { } ''
     install -Dm755 ${../../bin/tmux2} "$out/bin/tmux2"
   '';
@@ -45,6 +50,8 @@ in
         export PATH=${config.programs.nixvim.build.package}/bin:$PATH
       '')
     ];
+
+    shellAliases.btop = ''command ${pkgs.btop}/bin/btop --config "${config.xdg.configHome}/btop/flexoki-$([[ "$(${pkgs.termbg}/bin/termbg)" == *"Theme: Light"* ]] && printf light || printf dark).conf"'';
   };
 
   programs.starship = {
@@ -65,6 +72,11 @@ in
 
   home.file = {
     ".tmux.conf".source = ../../config/tmux/tmux.conf;
+  };
+
+  xdg.configFile = {
+    "btop/flexoki-dark.conf".text = mkBtopConfig "dark";
+    "btop/flexoki-light.conf".text = mkBtopConfig "light";
   };
 
   home.packages = [
