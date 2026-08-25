@@ -8,6 +8,28 @@
 }:
 let
   yamlFormat = pkgs.formats.yaml { };
+  rodConfig =
+    pkgs.writeTextDir
+      (
+        if pkgs.stdenv.isDarwin then
+          "Library/Application Support/rod/config.toml"
+        else
+          ".config/rod/config.toml"
+      )
+      ''
+        fallback_to_light = false
+      '';
+  terminalTheme = pkgs.writeShellApplication {
+    name = "terminal-theme";
+    runtimeInputs = [ pkgs.rod ];
+    text = ''
+      if [ "$(HOME=${rodConfig} rod print)" = Light ]; then
+        printf 'light\n'
+      else
+        printf 'dark\n'
+      fi
+    '';
+  };
   mkBtopConfig = variant: ''
     #? Config file for btop v.${pkgs.btop.version}
     color_theme = "flexoki-${variant}"
@@ -52,7 +74,10 @@ in
       '')
     ];
 
-    shellAliases.btop = ''command ${pkgs.btop}/bin/btop --config "${config.xdg.configHome}/btop/flexoki-$([[ "$(${pkgs.termbg}/bin/termbg)" == *"Theme: Light"* ]] && printf light || printf dark).conf"'';
+    shellAliases = {
+      btop = ''command ${pkgs.btop}/bin/btop --config "${config.xdg.configHome}/btop/flexoki-$(${terminalTheme}/bin/terminal-theme).conf"'';
+      glow = ''command ${pkgs.glow}/bin/glow -s "$(${terminalTheme}/bin/terminal-theme)"'';
+    };
   };
 
   programs.starship = {
@@ -96,6 +121,7 @@ in
     pkgs.jq
     pkgs.librespeed-cli
     personalCommands
+    terminalTheme
     pkgs.yq-go
   ];
 }
