@@ -7,6 +7,7 @@
   ...
 }:
 let
+  yamlFormat = pkgs.formats.yaml { };
   mkBtopConfig = variant: ''
     #? Config file for btop v.${pkgs.btop.version}
     color_theme = "flexoki-${variant}"
@@ -74,9 +75,18 @@ in
     ".tmux.conf".source = ../../config/tmux/tmux.conf;
   };
 
+  home.sessionVariables.GLOW_CONFIG_HOME = "${config.xdg.configHome}/glow";
+
   xdg.configFile = {
     "btop/flexoki-dark.conf".text = mkBtopConfig "dark";
     "btop/flexoki-light.conf".text = mkBtopConfig "light";
+    "glow/glow.yml".source = yamlFormat.generate "glow.yml" {
+      all = false;
+      mouse = true;
+      pager = true;
+      style = "auto";
+      width = 140;
+    };
   };
 
   home.packages = [
