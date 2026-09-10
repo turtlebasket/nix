@@ -93,7 +93,7 @@ in
   programs.git = {
     enable = true;
     settings = {
-      core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -A -G -j2 -+LFX";
+      core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -c -A -G -j2 -+LFX";
       split-diffs.theme-name = "auto";
     };
   };
