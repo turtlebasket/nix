@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Keep a shared miscellaneous session rooted at home.
+session="_misc"
+
+cd "$HOME" || exit 1
+
+if tmux has-session -t "=$session" 2>/dev/null; then
+    exec tmux attach -t "=$session"
+else
+    exec tmux new -s "$session"
+fi

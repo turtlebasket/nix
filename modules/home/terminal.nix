@@ -37,6 +37,7 @@ let
   '';
   personalCommands = pkgs.runCommand "personal-terminal-commands" { } ''
     install -Dm755 ${../../bin/tmux2} "$out/bin/tmux2"
+    install -Dm755 ${../../bin/tmisc} "$out/bin/tmisc"
   '';
 in
 {
