@@ -131,7 +131,6 @@ in
       llmAgentPackages.agent-browser
       llmAgentPackages.claude-code
       llmAgentPackages.codex
-      llmAgentPackages.opencode
       llmAgentPackages.skills
       git-split-diffs.packages.${system}.git-split-diffs
     ]
