@@ -10,9 +10,15 @@ session="$(basename "$target" | tr '.:%' '---')"
 
 cd "$target" || exit 1
 
-tmux has-session -t "$session" 2>/dev/null
-if [[ $? -eq 0 ]]; then
-    exec tmux attach -t "$session"
+if [[ -n "${TMUX:-}" ]]; then
+    if ! tmux has-session -t "=$session" 2>/dev/null; then
+        tmux new-session -d -s "$session" -c "$target" || exit 1
+    fi
+    exec tmux switch-client -t "=$session"
+fi
+
+if tmux has-session -t "=$session" 2>/dev/null; then
+    exec tmux attach -t "=$session"
 else
     exec tmux new -s "$session"
 fi
