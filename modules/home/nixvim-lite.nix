@@ -349,14 +349,16 @@
       map(m[1], m[2], m[3])
     end
 
-    vim.keymap.set('n', '<leader>/', function()
-      return vim.v.count == 0 and '<Plug>(comment_toggle_linewise_current)'
-        or '<Plug>(comment_toggle_linewise_count)'
-    end, { expr = true, silent = true, desc = 'Toggle line comment' })
+    for _, lhs in ipairs({ '<C-/>', '<C-_>' }) do
+      vim.keymap.set('n', lhs, function()
+        return vim.v.count == 0 and '<Plug>(comment_toggle_linewise_current)'
+          or '<Plug>(comment_toggle_linewise_count)'
+      end, { expr = true, silent = true, desc = 'Toggle line comment' })
 
-    vim.keymap.set('x', '<leader>/', '<Plug>(comment_toggle_blockwise_visual)', {
-      silent = true,
-      desc = 'Toggle block comment',
-    })
+      vim.keymap.set('x', lhs, '<Plug>(comment_toggle_linewise_visual)', {
+        silent = true,
+        desc = 'Toggle line comment',
+      })
+    end
   '';
 }
