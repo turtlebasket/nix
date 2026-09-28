@@ -106,6 +106,7 @@ in
   home.packages =
     let
       personalCommands = pkgs.runCommand "personal-workstation-commands" { } ''
+        install -Dm755 ${../../bin/nwt} "$out/bin/nwt"
         install -Dm755 ${../../bin/ntfy-cmd} "$out/bin/ntfy-cmd"
         install -Dm755 ${../../bin/ntfy-msg} "$out/bin/ntfy-msg"
         install -Dm755 ${../../bin/ntfy-osc9} "$out/bin/ntfy-osc9"

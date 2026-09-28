@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+program="${0##*/}"
+
+usage() {
+    cat <<EOF
+Usage: $program [--from-branch <branch>] <new-branch>
+
+Create <new-branch> in a sibling Git worktree. Slashes in the branch name
+become plus signs in the worktree path.
+
+Options:
+  --from-branch <branch>  Start from a local or remote branch instead of HEAD
+  -h, --help              Show this help
+EOF
+}
+
+die() {
+    printf '%s: %s\n' "$program" "$*" >&2
+    exit 1
+}
+
+valid_branch_name() {
+    local branch="$1"
+    local normalized
+
+    normalized="$(git check-ref-format --branch "$branch" 2>/dev/null)" || return 1
+    [[ "$normalized" == "$branch" ]]
+}
+
+remote_branch_commit() {
+    local requested="$1"
+    local remote
+    local remote_branch
+    local ref
+    local commit
+    local status
+    local qualified_remote=""
+    local qualified_branch=""
+    local failed_remote=""
+    local -a remotes=()
+    local -a matches=()
+    local -a match_branches=()
+
+    while IFS= read -r remote; do
+        [[ -n "$remote" ]] && remotes+=("$remote")
+    done < <(git remote)
+
+    for remote in "${remotes[@]}"; do
+        if [[ "$requested" == "$remote/"* ]]; then
+            if [[ -n "$qualified_remote" ]]; then
+                die "source branch '$requested' matches more than one remote name"
+            fi
+            qualified_remote="$remote"
+            qualified_branch="${requested#"$remote/"}"
+        fi
+    done
+
+    if [[ -n "$qualified_remote" ]]; then
+        ref="refs/remotes/$qualified_remote/$qualified_branch"
+        if git show-ref --verify --quiet "$ref"; then
+            git rev-parse --verify "${ref}^{commit}"
+            return
+        fi
+
+        remotes=("$qualified_remote")
+        requested="$qualified_branch"
+    else
+        for remote in "${remotes[@]}"; do
+            ref="refs/remotes/$remote/$requested"
+            if git show-ref --verify --quiet "$ref"; then
+                matches+=("$remote")
+                match_branches+=("$requested")
+            fi
+        done
+
+        if (( ${#matches[@]} == 1 )); then
+            ref="refs/remotes/${matches[0]}/${match_branches[0]}"
+            git rev-parse --verify "${ref}^{commit}"
+            return
+        fi
+
+        if (( ${#matches[@]} > 1 )); then
+            die "source branch '$requested' exists on multiple remotes; qualify it as <remote>/$requested"
+        fi
+    fi
+
+    if (( ${#remotes[@]} == 0 )); then
+        die "source branch '$requested' was not found locally and this repository has no remotes"
+    fi
+
+    for remote in "${remotes[@]}"; do
+        remote_branch="$requested"
+        if git ls-remote --exit-code --heads "$remote" "refs/heads/$remote_branch" >/dev/null; then
+            matches+=("$remote")
+            match_branches+=("$remote_branch")
+        else
+            status=$?
+            if (( status != 2 )); then
+                failed_remote="$remote"
+            fi
+        fi
+    done
+
+    if [[ -n "$failed_remote" ]]; then
+        die "could not inspect remote '$failed_remote' while resolving source branch '$requested'"
+    fi
+
+    if (( ${#matches[@]} == 0 )); then
+        die "source branch '$requested' was not found locally or on a remote"
+    fi
+
+    if (( ${#matches[@]} > 1 )); then
+        die "source branch '$requested' exists on multiple remotes; qualify it as <remote>/$requested"
+    fi
+
+    remote="${matches[0]}"
+    remote_branch="${match_branches[0]}"
+    git fetch --no-tags "$remote" "refs/heads/$remote_branch" >&2
+    commit="$(git rev-parse --verify 'FETCH_HEAD^{commit}')" || die "remote branch '$remote/$remote_branch' does not point to a commit"
+    printf '%s\n' "$commit"
+}
+
+from_branch=""
+new_branch=""
+
+while (( $# > 0 )); do
+    case "$1" in
+        --from-branch)
+            (( $# >= 2 )) || die "--from-branch requires a branch name"
+            [[ -z "$from_branch" ]] || die "--from-branch may only be specified once"
+            from_branch="$2"
+            shift 2
+            ;;
+        --from-branch=*)
+            [[ -z "$from_branch" ]] || die "--from-branch may only be specified once"
+            from_branch="${1#*=}"
+            [[ -n "$from_branch" ]] || die "--from-branch requires a branch name"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            while (( $# > 0 )); do
+                [[ -z "$new_branch" ]] || die "expected one new branch name"
+                new_branch="$1"
+                shift
+            done
+            ;;
+        -*)
+            die "unknown option '$1'"
+            ;;
+        *)
+            [[ -z "$new_branch" ]] || die "expected one new branch name"
+            new_branch="$1"
+            shift
+            ;;
+    esac
+done
+
+[[ -n "$new_branch" ]] || {
+    usage >&2
+    exit 1
+}
+
+inside_worktree="$(git rev-parse --is-inside-work-tree 2>/dev/null)" || die "not inside a Git worktree"
+[[ "$inside_worktree" == "true" ]] || die "not inside a Git worktree"
+
+worktree_root="$(git rev-parse --show-toplevel)"
+worktree_root="$(cd "$worktree_root" && pwd -P)"
+cd "$worktree_root"
+
+valid_branch_name "$new_branch" || die "invalid branch name '$new_branch'"
+
+if git show-ref --verify --quiet "refs/heads/$new_branch"; then
+    die "branch '$new_branch' already exists"
+fi
+
+if [[ -n "$from_branch" ]]; then
+    valid_branch_name "$from_branch" || die "invalid source branch name '$from_branch'"
+
+    if git show-ref --verify --quiet "refs/heads/$from_branch"; then
+        start_commit="$(git rev-parse --verify "refs/heads/$from_branch^{commit}")"
+    else
+        start_commit="$(remote_branch_commit "$from_branch")"
+    fi
+else
+    start_commit="$(git rev-parse --verify 'HEAD^{commit}' 2>/dev/null)" || die "HEAD does not point to a commit"
+fi
+
+path_branch="${new_branch//\//+}"
+target="${worktree_root}+${path_branch}"
+
+if [[ -e "$target" || -L "$target" ]]; then
+    die "target path already exists: $target"
+fi
+
+git worktree add -b "$new_branch" "$target" "$start_commit"
+printf '%s\n' "$target"

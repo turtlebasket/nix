@@ -170,6 +170,19 @@
     {
       formatter = forSystems mkFormatter;
 
+      checks = forSystems (
+        system:
+        let
+          pkgs = mkPkgs system;
+        in
+        {
+          nwt = pkgs.runCommand "nwt-tests" { nativeBuildInputs = [ pkgs.git ]; } ''
+            bash ${./tests/nwt.bash} ${./bin/nwt}
+            touch "$out"
+          '';
+        }
+      );
+
       inherit homeManagerModules nixosModules;
 
       lib = {
