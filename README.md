@@ -34,11 +34,18 @@ For NixOS hosts, compose system modules from `nixosModules`:
 nixosConfigurations.<host> = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
   modules = [
-    nix.nixosModules.server
+    nix.nixosModules.workserver
     ./hosts/<host>/system.nix
   ];
 };
 ```
+
+`nix.nixosModules.workserver` is for interactive machines that must also remain
+remotely accessible. It imports the server role, so OpenSSH remains available,
+and enables the Eternal Terminal server with its configured TCP port open (2022
+by default). The Eternal Terminal package also includes the `et` client. This
+module does not change suspend, hibernation, lid, or other power-management
+behavior; compose those policies separately when a laptop should stay online.
 
 `nix.nixosModules.server` includes the shared Nix daemon policy, openssh defaults, and firewall port 22. The daemon policy configures preferred substituters, trusted public keys, `builders-use-substitutes`, and `experimental-features = nix-command flakes`. For NixOS hosts that only need the daemon policy, import `nix.nixosModules.nix-daemon`.
 

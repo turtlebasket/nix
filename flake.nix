@@ -118,6 +118,7 @@
       nixosModules = rec {
         nix-daemon = ./modules/nixos/nix-daemon.nix;
         server = ./modules/nixos/server.nix;
+        workserver = ./modules/nixos/workserver.nix;
 
         default = server;
       };
@@ -180,6 +181,30 @@
             bash ${./tests/nwt.bash} ${./bin/nwt}
             touch "$out"
           '';
+
+          nixos-workserver =
+            let
+              cfg =
+                (nixpkgs.lib.nixosSystem {
+                  system = linuxSystem;
+                  modules = [
+                    nixosModules.workserver
+                    {
+                      services.eternal-terminal.port = 22022;
+                      system.stateVersion = "26.05";
+                    }
+                  ];
+                }).config;
+            in
+            assert cfg.services.openssh.enable;
+            assert cfg.services.eternal-terminal.enable;
+            assert builtins.elem 22 cfg.networking.firewall.allowedTCPPorts;
+            assert builtins.elem 22022 cfg.networking.firewall.allowedTCPPorts;
+            assert cfg.systemd.sleep.settings.Sleep == { };
+            assert !(builtins.hasAttr "HandleLidSwitch" cfg.services.logind.settings.Login);
+            pkgs.runCommand "nixos-workserver-tests" { } ''
+              touch "$out"
+            '';
         }
       );
 
