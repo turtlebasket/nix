@@ -118,11 +118,14 @@ in
   home.packages = [
     pkgs.bat
     pkgs.dua
+    pkgs.fastfetch
+    pkgs.gh
     pkgs.glow
     pkgs.jq
     pkgs.librespeed-cli
     personalCommands
     terminalTheme
+    pkgs.tree
     pkgs.yq-go
   ];
 }
