@@ -1,7 +1,11 @@
-## Branches & Worktrees
+## Development 
+
+### Branches & Worktrees
 
 ...go in `.worktrees/`, and branch names should follow Conventional Commits. e.g.:
 
 - `feat/abc` -> `.worktrees/feat+abc`
 - `fix/xyz` -> `.worktrees/fix+xyz`
+
+Only create a worktree, branch or PR **if you are explicitly asked to**.
 
