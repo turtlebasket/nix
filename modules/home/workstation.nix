@@ -94,6 +94,16 @@ in
     enable = true;
     settings = {
       core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -c -A -G -j2 -+LFX";
+      credential = {
+        "https://gist.github.com".helper = [
+          ""
+          "${pkgs.gh}/bin/gh auth git-credential"
+        ];
+        "https://github.com".helper = [
+          ""
+          "${pkgs.gh}/bin/gh auth git-credential"
+        ];
+      };
       split-diffs.theme-name = "auto";
     };
   };
