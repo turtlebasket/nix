@@ -11,7 +11,7 @@ let
   rodConfig =
     pkgs.writeTextDir
       (
-        if pkgs.stdenv.isDarwin then
+        if pkgs.stdenv.hostPlatform.isDarwin then
           "Library/Application Support/rod/config.toml"
         else
           ".config/rod/config.toml"
