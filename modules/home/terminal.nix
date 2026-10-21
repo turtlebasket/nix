@@ -76,6 +76,7 @@ in
     ];
 
     shellAliases = {
+      t2 = "tmux2";
       btop = ''command ${pkgs.btop}/bin/btop --config "${config.xdg.configHome}/btop/flexoki-$(${terminalTheme}/bin/terminal-theme).conf"'';
       glow = ''command ${pkgs.glow}/bin/glow -s "$(${terminalTheme}/bin/terminal-theme)"'';
     };
