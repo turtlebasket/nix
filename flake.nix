@@ -182,6 +182,21 @@
             touch "$out"
           '';
 
+          ewt =
+            pkgs.runCommand "ewt-tests"
+              {
+                nativeBuildInputs = [
+                  pkgs.git
+                  pkgs.zsh
+                ];
+              }
+              ''
+                mkdir bin
+                install -m755 ${./bin/ewt} bin/ewt
+                zsh -f ${./tests/ewt.zsh} ${./config/zsh/shared.zsh} "$PWD/bin/ewt"
+                touch "$out"
+              '';
+
           nixos-workserver =
             let
               cfg =

@@ -19,6 +19,33 @@ alias n9='ntfy-osc9'
 
 alias glggo='git log --graph --oneline'
 
+# Enter worktree in this shell; the executable resolves the branch's path.
+ewt() {
+  emulate -L zsh
+  if [[ "${1:-}" == -h || "${1:-}" == --help || "${1:-}" == --list ]]; then
+    command ewt "$@"
+    return $?
+  fi
+  local target
+  # The sentinel keeps command substitution from stripping path newlines.
+  target=$(command ewt "$@" && printf '.') || return $?
+  builtin cd -- "${target%$'\n.'}"
+}
+
+_ewt() {
+  emulate -L zsh
+  (( CURRENT == 2 )) || return 1
+  local listing
+  listing=$(command ewt --list 2>/dev/null) || return 1
+  local -a branches
+  branches=("${(@f)listing}")
+  compadd -a branches
+}
+
+if (( $+functions[compdef] )); then
+  compdef _ewt ewt
+fi
+
 alias dp='docker ps'
 alias dcl='docker container ls'
 alias dcla='docker container ls -a'

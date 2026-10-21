@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+ewt - enter worktree
+
+Usage: ewt <branch>
+       ewt --list
+
+Enter a branch's existing worktree in the current Git repository.
+The Zsh integration changes directory; the executable prints the path.
+Tab completion offers branches with existing worktrees.
+
+Options:
+  --list      List branches with existing worktrees
+  -h, --help  Show this help
+
+Example:
+  ewt feat/mybranch
+EOF
+}
+
+die() {
+    printf 'ewt: %s\n' "$*" >&2
+    exit 1
+}
+
+if (( $# != 1 )) || [[ -z "$1" ]]; then
+    usage >&2
+    exit 1
+fi
+
+case "$1" in
+    -h|--help) usage; exit 0 ;;
+    --list) mode=list ;;
+    -*) die "unknown option '$1'" ;;
+    *) mode=path ;;
+esac
+
+git rev-parse --git-dir >/dev/null 2>&1 || die 'not inside a Git repository'
+
+worktree=''
+target=''
+# NUL delimiters preserve spaces, backslashes, and newlines in paths.
+while IFS= read -r -d '' field; do
+    case "$field" in
+        'worktree '*) worktree="${field#worktree }" ;;
+        'branch refs/heads/'*)
+            [[ -d "$worktree" ]] || continue
+            branch="${field#branch refs/heads/}"
+            if [[ "$mode" == list ]]; then
+                printf '%s\n' "$branch"
+            elif [[ "$branch" == "$1" ]]; then
+                target="$worktree"
+            fi
+            ;;
+    esac
+done < <(git worktree list --porcelain -z)
+
+if [[ "$mode" == path ]]; then
+    [[ -n "$target" ]] || die "no existing worktree for branch '$1'"
+    printf '%s\n' "$target"
+fi
