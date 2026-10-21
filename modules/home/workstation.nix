@@ -93,6 +93,23 @@ in
   programs.git = {
     enable = true;
     lfs.enable = true;
+    # Match the forge, rather than a checkout directory. Any matching remote
+    # enables this repository-wide identity, including in mixed-forge repos.
+    includes =
+      map
+        (url: {
+          condition = "hasconfig:remote.*.url:${url}";
+          contents.user = {
+            name = "turtlebasket";
+            email = "32886427+turtlebasket@users.noreply.github.com";
+          };
+        })
+        [
+          "https://github.com/**"
+          "git@github.com:*/**"
+          "ssh://git@github.com/**"
+          "ssh://git@github.com:22/**"
+        ];
     settings = {
       core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -c -A -G -j2 -+LFX";
       credential = {
