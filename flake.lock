@@ -83,11 +83,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778453091,
-        "narHash": "sha256-ExE4vZ4D6dojLvqCkm0Ip5oZYQTK2FqOh8doaPmw4ds=",
+        "lastModified": 1792625866,
+        "narHash": "sha256-vNdTv2TG703AY5d1DLqU3ewz0GYYL/4TXytMpS2S0B0=",
         "owner": "turtlebasket",
         "repo": "git-split-diffs",
-        "rev": "965581a9b0ce15550163c6c998e42ec8db7f5e84",
+        "rev": "f7950040b1d1a72819786deaf35fd42e122873d7",
         "type": "github"
       },
       "original": {

@@ -111,7 +111,9 @@ in
           "ssh://git@github.com:22/**"
         ];
     settings = {
-      core.pager = "git-split-diffs --color | ${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -c -A -G -j2 -+LFX";
+      core.pager =
+        "git-split-diffs --color "
+        + lib.escapeShellArg "--pager=${gitSplitDiffsLess}/bin/less --lesskey-src=${gitSplitDiffsLesskey} -c -A -G -j2 -+LFX";
       credential = {
         "https://gist.github.com".helper = [
           ""
