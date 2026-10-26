@@ -118,6 +118,7 @@ in
 
   home.packages = [
     pkgs.bat
+    pkgs.bubblewrap
     pkgs.dua
     pkgs.fastfetch
     pkgs.gh
