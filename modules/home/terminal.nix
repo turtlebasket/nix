@@ -118,7 +118,6 @@ in
 
   home.packages = [
     pkgs.bat
-    pkgs.bubblewrap
     pkgs.dua
     pkgs.fastfetch
     pkgs.gh
@@ -129,5 +128,6 @@ in
     terminalTheme
     pkgs.tree
     pkgs.yq-go
-  ];
+  ]
+  ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.bubblewrap ];
 }
