@@ -43,7 +43,7 @@ _ewt() {
 }
 
 if (( $+functions[compdef] )); then
-  compdef _ewt ewt
+  compdef _ewt ewt tmux2wt t2wt
 fi
 
 alias dp='docker ps'

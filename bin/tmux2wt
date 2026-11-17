@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+tmux2wt - open a worktree in tmux
+
+Usage: tmux2wt <branch>
+       tmux2wt --list
+
+Open a branch's existing worktree in a tmux session named <repo>--<branch>.
+The repo name comes from the main checkout's directory, even in linked worktrees.
+Dots, colons, and percent signs in session names become dashes.
+Creates or reuses the session, switching clients inside tmux and attaching outside.
+Tab completion offers branches with existing worktrees. Alias: t2wt.
+
+Options:
+  --list      List branches with existing worktrees
+  -h, --help  Show this help
+
+Example:
+  t2wt feat/mybranch
+EOF
+}
+
+if (( $# != 1 )) || [[ -z "$1" ]]; then
+    usage >&2
+    exit 1
+fi
+
+case "$1" in
+    -h|--help) usage; exit 0 ;;
+    --list) exec ewt --list ;;
+    -*) printf "tmux2wt: unknown option '%s'\n" "$1" >&2; exit 1 ;;
+esac
+
+# The sentinel preserves any trailing newlines in the resolved worktree path.
+target="$(ewt "$1" && printf '.')"
+
+# Git lists the main checkout first; use its name regardless of the current worktree.
+IFS= read -r -d '' main < <(git worktree list --porcelain -z)
+repo="${main#worktree }"
+exec tmux2 "${target%$'\n.'}" "${repo##*/}--$1"

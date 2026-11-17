@@ -197,6 +197,20 @@
                 touch "$out"
               '';
 
+          tmux2wt =
+            pkgs.runCommand "tmux2wt-tests"
+              {
+                nativeBuildInputs = [ pkgs.git ];
+              }
+              ''
+                mkdir bin
+                install -m755 ${./bin/tmux2wt} bin/tmux2wt
+                install -m755 ${./bin/ewt} bin/ewt
+                install -m755 ${./bin/tmux2} bin/tmux2
+                bash ${./tests/tmux2wt.bash} "$PWD/bin/tmux2wt" "$PWD/bin/ewt" "$PWD/bin/tmux2"
+                touch "$out"
+              '';
+
           nixos-workserver =
             let
               cfg =

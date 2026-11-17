@@ -81,6 +81,8 @@ in
     source ${../../config/zsh/shared.zsh}
   '';
 
+  programs.zsh.shellAliases.t2wt = "tmux2wt";
+
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
@@ -141,6 +143,7 @@ in
         install -Dm755 ${../../bin/ntfy-cmd} "$out/bin/ntfy-cmd"
         install -Dm755 ${../../bin/ntfy-msg} "$out/bin/ntfy-msg"
         install -Dm755 ${../../bin/ntfy-osc9} "$out/bin/ntfy-osc9"
+        install -Dm755 ${../../bin/tmux2wt} "$out/bin/tmux2wt"
       '';
       nixpkgsPackages =
         (with pkgs; [

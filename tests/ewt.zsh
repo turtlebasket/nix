@@ -92,6 +92,8 @@ assert_eq "$repo" "$PWD" 'failed invocations changed directory'
 pass 'rejects invalid arguments and branches without usable worktrees without changing directory'
 
 assert_eq _ewt "${_comps[ewt]}" 'ewt completion was not registered'
+assert_eq _ewt "${_comps[tmux2wt]}" 'tmux2wt completion was not registered'
+assert_eq _ewt "${_comps[t2wt]}" 't2wt completion was not registered'
 # Capture the candidates passed to Zsh; prefix matching is handled by compadd.
 typeset -a completion_candidates
 compadd() {

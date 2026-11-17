@@ -2,11 +2,13 @@
 
 # simple wrapper for tmux that creates a new session for current directory if one doesn't exist
 # meant for scoping sessions by /Projects/<project-name>/
+# Usage: tmux2 [directory [session-name]]
 
 target="${1:-$PWD}"
 target="$(cd "$target" 2>/dev/null && pwd)" || { echo "tmux2: cannot access '$1'" >&2; exit 1; }
 
-session="$(basename "$target" | tr '.:%' '---')"
+session="${2:-$(basename "$target")}"
+session="$(printf '%s' "$session" | tr '.:%' '---')"
 
 cd "$target" || exit 1
 
